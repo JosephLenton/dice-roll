@@ -7,17 +7,15 @@ use ::rand::Rng;
 use ::rand::SeedableRng;
 use ::rand::rngs::StdRng;
 
+type EvalResult = Result<self::Error, Output>;
+
 #[derive(Clone, Debug, PartialEq)]
-pub struct Output {
-  total: i32
+pub enum Output {
+  Integer(i32)
 }
 
-impl Output {
-  fn new(total:i32) -> Self {
-    Self {
-      total,
-    }
-  }
+pub enum Error {
+  DivideByZero,
 }
 
 pub struct Eval {
@@ -37,7 +35,7 @@ impl Eval {
 
   pub fn eval(&mut self, ast:Expr) -> Output {
     let total = self.walk(ast);
-    Output::new(total)
+    Output::Integer(total)
   }
 
   fn walk(&mut self, ast:Expr) -> i32 {
@@ -46,7 +44,7 @@ impl Eval {
       Expr::Add(box left, box right) => self.walk(left) + self.walk(right),
       Expr::Sub(box left, box right) => self.walk(left) - self.walk(right),
       Expr::Mult(box left, box right) => self.walk(left) * self.walk(right),
-      Expr::Div(box left, box right) => self.walk(left) / self.walk(right),
+      Expr::Div(box left, box right) => self.divide(left, right),
       Expr::Pow(box left, box right) => self.walk(left).pow(self.walk(right) as u32),
       Expr::Roll(box left, box right) => {
         let num_die = self.walk(left);
@@ -54,6 +52,14 @@ impl Eval {
         self.roll(num_die, num_sides)
       },
     }
+  }
+
+  fn divide(&mut self, left: Expr, right: Expr) -> i32 {
+    let left = self.walk(left);
+    let right = self.walk(right);
+    // todo, handle divide by zero
+
+    left / right
   }
 
   fn roll(&mut self, num_die : i32, num_sides: i32) -> i32 {

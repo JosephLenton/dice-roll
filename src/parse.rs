@@ -20,7 +20,7 @@ pub fn parse<'a>(expression : &'a str) -> Result<Vec<Expr>, pom::Error> {
 }
 
 fn exprs<'a>() -> Parser<'a, u8, Vec<Expr>> {
-  let exprs_list = list(call(expr_0), space());
+  let exprs_list = list(call(expr_0), space_or_comma());
   space() * exprs_list - end()
 }
 
@@ -121,6 +121,14 @@ fn float() -> Parser<u8, Expr> {
 
 fn space<'a>() -> Parser<'a, u8, ()> {
 	one_of(b" \t\r\n").repeat(0..).discard()
+}
+
+fn required_space<'a>() -> Parser<'a, u8, ()> {
+	one_of(b" \t\r\n").repeat(1..).discard()
+}
+
+fn space_or_comma<'a>() -> Parser<'a, u8, ()> {
+  ((space() - sym(b',') - space()) | required_space()).discard()
 }
 
 #[cfg(test)]
@@ -291,6 +299,38 @@ mod test {
 
   #[test]
   fn it_should_handle_multiple_die_rolls() {
+    test_multiple(&"1d6 1d6",
+      vec![
+        Expr::Roll(
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+        Expr::Roll(
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+      ]
+    );
+  }
+
+  #[test]
+  fn it_should_handle_multiple_die_rolls_with_commas_no_spaces() {
+    test_multiple(&"1d6,1d6",
+      vec![
+        Expr::Roll(
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+        Expr::Roll(
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+      ]
+    );
+  }
+
+  #[test]
+  fn it_should_handle_multiple_die_rolls_with_commas_and_spaces() {
     test_multiple(&"1d6 1d6",
       vec![
         Expr::Roll(
