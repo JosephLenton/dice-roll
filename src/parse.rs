@@ -104,7 +104,7 @@ fn expr_with_brackets<'a>() -> Parser<'a, u8, Expr> {
 }
 
 fn number<'a>() -> Parser<'a, u8, Expr> {
-  integer() // | float()
+  integer()
 }
 
 fn integer<'a>() -> Parser<'a, u8, Expr> {
