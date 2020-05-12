@@ -150,7 +150,7 @@ mod test {
 
   #[test]
   fn it_should_add_two_numbers_with_no_spaces() {
-    test_single(&"1+2", Expr::Add(
+    test_single(&"1+2", Expr::Operator( ExprOp::Add,
       Box::new(Expr::Integer(1)),
       Box::new(Expr::Integer(2)),
     ))
@@ -158,7 +158,7 @@ mod test {
 
   #[test]
   fn it_should_add_two_numbers_with_spaces() {
-    test_single(&"1 + 2", Expr::Add(
+    test_single(&"1 + 2", Expr::Operator( ExprOp::Add,
       Box::new(Expr::Integer(1)),
       Box::new(Expr::Integer(2)),
     ))
@@ -167,9 +167,9 @@ mod test {
   #[test]
   fn it_should_add_three_numbers_with_spaces() {
     test_single(&"1 + 2 + 3",
-      Expr::Add(
+      Expr::Operator( ExprOp::Add,
         Box::new(Expr::Integer(1)),
-        Box::new(Expr::Add(
+        Box::new(Expr::Operator( ExprOp::Add,
           Box::new(Expr::Integer(2)),
           Box::new(Expr::Integer(3)),
         ))
@@ -180,21 +180,21 @@ mod test {
   #[test]
   fn it_should_add_and_subtract_lots_of_numbers_with_spaces() {
     test_single(&"1 + 2 - 3 + 4 - 5 - 6 + 7 + 8 - 9",
-      Expr::Add(
+      Expr::Operator( ExprOp::Add,
         Box::new(Expr::Integer(1)),
-        Box::new(Expr::Sub(
+        Box::new(Expr::Operator( ExprOp::Sub,
           Box::new(Expr::Integer(2)),
-          Box::new(Expr::Add(
+          Box::new(Expr::Operator( ExprOp::Add,
             Box::new(Expr::Integer(3)),
-            Box::new(Expr::Sub(
+            Box::new(Expr::Operator( ExprOp::Sub,
               Box::new(Expr::Integer(4)),
-              Box::new(Expr::Sub(
+              Box::new(Expr::Operator( ExprOp::Sub,
                 Box::new(Expr::Integer(5)),
-                Box::new(Expr::Add(
+                Box::new(Expr::Operator( ExprOp::Add,
                   Box::new(Expr::Integer(6)),
-                  Box::new(Expr::Add(
+                  Box::new(Expr::Operator( ExprOp::Add,
                     Box::new(Expr::Integer(7)),
-                    Box::new(Expr::Sub(
+                    Box::new(Expr::Operator( ExprOp::Sub,
                       Box::new(Expr::Integer(8)),
                       Box::new(Expr::Integer(9)),
                     ))
@@ -211,9 +211,9 @@ mod test {
   #[test]
   fn it_should_add_handle_operator_precedence_with_mult_and_add() {
     test_single(&"1 + 2 * 3",
-      Expr::Add(
+      Expr::Operator( ExprOp::Add,
         Box::new(Expr::Integer(1)),
-        Box::new(Expr::Mult(
+        Box::new(Expr::Operator( ExprOp::Mult,
           Box::new(Expr::Integer(2)),
           Box::new(Expr::Integer(3)),
         )),
@@ -221,8 +221,8 @@ mod test {
     );
 
     test_single(&"1 * 2 + 3",
-      Expr::Add(
-        Box::new(Expr::Mult(
+      Expr::Operator( ExprOp::Add,
+        Box::new(Expr::Operator( ExprOp::Mult,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(2)),
         )),
@@ -234,18 +234,18 @@ mod test {
   #[test]
   fn it_should_add_handle_operator_precedence_with_lots_of_numbers() {
     test_single(&"1 + 2 * 3 * 4 + 5 * 6 + 7",
-      Expr::Add(
+      Expr::Operator( ExprOp::Add,
         Box::new(Expr::Integer(1)),
-        Box::new(Expr::Add(
-          Box::new(Expr::Mult(
+        Box::new(Expr::Operator( ExprOp::Add,
+          Box::new(Expr::Operator( ExprOp::Mult,
             Box::new(Expr::Integer(2)),
-            Box::new(Expr::Mult(
+            Box::new(Expr::Operator( ExprOp::Mult,
               Box::new(Expr::Integer(3)),
               Box::new(Expr::Integer(4)),
             )),
           )),
-          Box::new(Expr::Add(
-            Box::new(Expr::Mult(
+          Box::new(Expr::Operator( ExprOp::Add,
+            Box::new(Expr::Operator( ExprOp::Mult,
               Box::new(Expr::Integer(5)),
               Box::new(Expr::Integer(6)),
             )),
@@ -259,14 +259,14 @@ mod test {
   #[test]
   fn it_should_handle_brackets() {
     test_single(&"(1 + 2) * 3 * (4 + 5)",
-      Expr::Mult(
-        Box::new(Expr::Add(
+      Expr::Operator( ExprOp::Mult,
+        Box::new(Expr::Operator( ExprOp::Add,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(2)),
         )),
-        Box::new(Expr::Mult(
+        Box::new(Expr::Operator( ExprOp::Mult,
           Box::new(Expr::Integer(3)),
-          Box::new(Expr::Add(
+          Box::new(Expr::Operator( ExprOp::Add,
             Box::new(Expr::Integer(4)),
             Box::new(Expr::Integer(5)),
           )),
@@ -279,15 +279,15 @@ mod test {
   fn it_should_handle_multiple_expressions() {
     test_multiple(&"1 + 2 * 3 1 * 2 + 3",
       vec![
-        Expr::Add(
+        Expr::Operator( ExprOp::Add,
           Box::new(Expr::Integer(1)),
-          Box::new(Expr::Mult(
+          Box::new(Expr::Operator( ExprOp::Mult,
             Box::new(Expr::Integer(2)),
             Box::new(Expr::Integer(3)),
           )),
         ),
-        Expr::Add(
-          Box::new(Expr::Mult(
+        Expr::Operator( ExprOp::Add,
+          Box::new(Expr::Operator( ExprOp::Mult,
             Box::new(Expr::Integer(1)),
             Box::new(Expr::Integer(2)),
           )),
@@ -301,11 +301,11 @@ mod test {
   fn it_should_handle_multiple_die_rolls() {
     test_multiple(&"1d6 1d6",
       vec![
-        Expr::Roll(
+        Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(6)),
         ),
-        Expr::Roll(
+        Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(6)),
         ),
@@ -317,11 +317,11 @@ mod test {
   fn it_should_handle_multiple_die_rolls_with_commas_no_spaces() {
     test_multiple(&"1d6,1d6",
       vec![
-        Expr::Roll(
+        Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(6)),
         ),
-        Expr::Roll(
+        Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(6)),
         ),
@@ -333,11 +333,11 @@ mod test {
   fn it_should_handle_multiple_die_rolls_with_commas_and_spaces() {
     test_multiple(&"1d6 1d6",
       vec![
-        Expr::Roll(
+        Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(6)),
         ),
-        Expr::Roll(
+        Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),
           Box::new(Expr::Integer(6)),
         ),
