@@ -1,4 +1,4 @@
-use crate::expr::Expr;
+use crate::expr::{Expr, ExprOp};
 use ::pom::parser::*;
 use ::pom;
 use ::std::str::{self, FromStr};
@@ -34,8 +34,8 @@ fn add_sub<'a>() -> Parser<'a, u8, Expr> {
   parser.map(|(add_subs, right)| {
     add_subs.into_iter().rev().fold(right, |right, (left, op)| {
       match op {
-        AddSubOp::Add => Expr::Add(box left, box right),
-        AddSubOp::Sub => Expr::Sub(box left, box right),
+        AddSubOp::Add => Expr::Operator(ExprOp::Add, box left, box right),
+        AddSubOp::Sub => Expr::Operator(ExprOp::Sub, box left, box right),
       }
     })
   })
@@ -55,8 +55,8 @@ fn mult_div<'a>() -> Parser<'a, u8, Expr> {
   parser.map(|(mult_divs, right)| {
     mult_divs.into_iter().rev().fold(right, |right, (left, op)| {
       match op {
-        MultDivOp::Mult => Expr::Mult(Box::new(left), Box::new(right)),
-        MultDivOp::Div => Expr::Div(Box::new(left), Box::new(right)),
+        MultDivOp::Mult => Expr::Operator(ExprOp::Mult, box left, box right),
+        MultDivOp::Div => Expr::Operator(ExprOp::Div, box left, box right),
       }
     })
   })
@@ -75,7 +75,7 @@ fn pow<'a>() -> Parser<'a, u8, Expr> {
 
   parser.map(|(pows, right)| {
     pows.into_iter().rev().fold(right, |right, left| {
-      Expr::Pow(Box::new(left), Box::new(right))
+      Expr::Operator(ExprOp::Pow, box left, box right)
     })
   })
 }
@@ -90,7 +90,7 @@ fn roll<'a>() -> Parser<'a, u8, Expr> {
 
   parser.map(|(rolls, right)| {
     rolls.into_iter().rev().fold(right, |right, left| {
-      Expr::Roll(Box::new(left), Box::new(right))
+      Expr::Operator(ExprOp::Roll, box left, box right)
     })
   })
 }
