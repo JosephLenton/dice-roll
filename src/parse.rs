@@ -108,16 +108,10 @@ fn number<'a>() -> Parser<'a, u8, Expr> {
 }
 
 fn integer<'a>() -> Parser<'a, u8, Expr> {
-  let parser = one_of(b"123456789") - one_of(b"0123456789").repeat(0..) | sym(b'0');
-  parser.collect().convert(str::from_utf8).convert(|s| i32::from_str(&s)).map(|n| Expr::Integer(n))
+  let unsigned_parser = one_of(b"123456789") - one_of(b"0123456789").repeat(0..) | sym(b'0');
+  let signed_parser = sym(b'-').opt() * unsigned_parser;
+  signed_parser.collect().convert(str::from_utf8).convert(|s| i32::from_str(&s)).map(|n| Expr::Integer(n))
 }
-
-/*
-fn float() -> Parser<u8, Expr> {
-  let parser = sym(b"0") | one_of(b"123456789") + one_of(b"0123456789").repeat(0..);
-  parser.collect().convert(str::from_utf8).convert(|s| i32::from_str(&s)).map(|n| Expr::Integer(n))
-}
-*/
 
 fn space<'a>() -> Parser<'a, u8, ()> {
 	one_of(b" \t\r\n").repeat(0..).discard()
