@@ -1,4 +1,5 @@
 #![feature(box_syntax, box_patterns)]
+#![feature(impl_trait_in_bindings)]
 
 use ::std::env;
 use ::pom;

@@ -1,17 +1,10 @@
-use crate::expr::{Expr, ExprOp};
+use crate::expr::Expr;
 use ::pom::parser::*;
 use ::pom;
-use ::std::str::{self, FromStr};
 
-enum AddSubOp {
-  Add,
-  Sub,
-}
-
-enum MultDivOp {
-  Mult,
-  Div,
-}
+mod op;
+mod space;
+mod number;
 
 pub fn parse<'a>(expression : &'a str) -> Result<Vec<Expr>, pom::Error> {
   let bytes = expression.as_bytes();
@@ -20,8 +13,8 @@ pub fn parse<'a>(expression : &'a str) -> Result<Vec<Expr>, pom::Error> {
 }
 
 fn exprs<'a>() -> Parser<'a, u8, Vec<Expr>> {
-  let exprs_list = list(call(expr_0), space_or_comma());
-  space() * exprs_list - end()
+  let exprs_list = list(call(expr_0), space::comma());
+  space::optional() * exprs_list - end()
 }
 
 fn expr_0<'a>() -> Parser<'a, u8, Expr> {
@@ -29,41 +22,17 @@ fn expr_0<'a>() -> Parser<'a, u8, Expr> {
 }
 
 fn add_sub<'a>() -> Parser<'a, u8, Expr> {
-  let parser = (expr_1() - space() + add_sub_op() - space()).repeat(1..) + expr_1();
-
-  parser.map(|(add_subs, right)| {
-    add_subs.into_iter().rev().fold(right, |right, (left, op)| {
-      match op {
-        AddSubOp::Add => Expr::Operator(ExprOp::Add, box left, box right),
-        AddSubOp::Sub => Expr::Operator(ExprOp::Sub, box left, box right),
-      }
-    })
-  })
+  let parser = (expr_1() - space::optional() + op::add_sub() - space::optional()) + call(expr_0);
+  parser.map(|((left, op), right)| Expr::Operator(op, box left, box right))
 }
 
 fn expr_1<'a>() -> Parser<'a, u8, Expr> {
   mult_div() | expr_2()
 }
 
-fn add_sub_op<'a>() -> Parser<'a, u8, AddSubOp> {
-  sym(b'+').discard().map(|_| AddSubOp::Add) | sym(b'-').discard().map(|_| AddSubOp::Sub)
-}
-
 fn mult_div<'a>() -> Parser<'a, u8, Expr> {
-  let parser = (expr_2() - space() + mult_div_op() - space()).repeat(1..) + expr_2();
-
-  parser.map(|(mult_divs, right)| {
-    mult_divs.into_iter().rev().fold(right, |right, (left, op)| {
-      match op {
-        MultDivOp::Mult => Expr::Operator(ExprOp::Mult, box left, box right),
-        MultDivOp::Div => Expr::Operator(ExprOp::Div, box left, box right),
-      }
-    })
-  })
-}
-
-fn mult_div_op<'a>() -> Parser<'a, u8, MultDivOp> {
-  sym(b'*').discard().map(|_| MultDivOp::Mult) | sym(b'/').discard().map(|_| MultDivOp::Div)
+  let parser = (expr_2() - space::optional() + op::mult_div() - space::optional()) + call(expr_1);
+  parser.map(|((left, op), right)| Expr::Operator(op, box left, box right))
 }
 
 fn expr_2<'a>() -> Parser<'a, u8, Expr> {
@@ -71,13 +40,8 @@ fn expr_2<'a>() -> Parser<'a, u8, Expr> {
 }
 
 fn pow<'a>() -> Parser<'a, u8, Expr> {
-  let parser = (expr_3() - space() - sym(b'^') - space()).repeat(1..) + expr_3();
-
-  parser.map(|(pows, right)| {
-    pows.into_iter().rev().fold(right, |right, left| {
-      Expr::Operator(ExprOp::Pow, box left, box right)
-    })
-  })
+  let parser = (expr_3() - space::optional() + op::power() - space::optional()) + call(expr_2);
+  parser.map(|((left, op), right)| Expr::Operator(op, box left, box right))
 }
 
 fn expr_3<'a>() -> Parser<'a, u8, Expr> {
@@ -85,49 +49,25 @@ fn expr_3<'a>() -> Parser<'a, u8, Expr> {
 }
 
 fn roll<'a>() -> Parser<'a, u8, Expr> {
-  let num_dice_parser = expr_4().opt().map(|maybe_num| maybe_num.unwrap_or(Expr::Integer(1)));
-  let parser = (num_dice_parser - sym(b'd')).repeat(1..) + expr_4();
-
-  parser.map(|(rolls, right)| {
-    rolls.into_iter().rev().fold(right, |right, left| {
-      Expr::Operator(ExprOp::Roll, box left, box right)
-    })
+  let parser = (expr_4().opt() + op::roll() - space::optional()) + call(expr_3);
+  parser.map(|((maybe_left, op), right)| {
+    let left = maybe_left.unwrap_or(Expr::Integer(1));
+    Expr::Operator(op, box left, box right)
   })
 }
 
 fn expr_4<'a>() -> Parser<'a, u8, Expr> {
-  expr_with_brackets() | number()
+  expr_with_brackets() | number::number()
 }
 
 fn expr_with_brackets<'a>() -> Parser<'a, u8, Expr> {
-  sym(b'(') * space() * call(expr_0) - space() - sym(b')')
-}
-
-fn number<'a>() -> Parser<'a, u8, Expr> {
-  integer()
-}
-
-fn integer<'a>() -> Parser<'a, u8, Expr> {
-  let unsigned_parser = one_of(b"123456789") - one_of(b"0123456789").repeat(0..) | sym(b'0');
-  let signed_parser = sym(b'-').opt() * unsigned_parser;
-  signed_parser.collect().convert(str::from_utf8).convert(|s| i32::from_str(&s)).map(|n| Expr::Integer(n))
-}
-
-fn space<'a>() -> Parser<'a, u8, ()> {
-	one_of(b" \t\r\n").repeat(0..).discard()
-}
-
-fn required_space<'a>() -> Parser<'a, u8, ()> {
-	one_of(b" \t\r\n").repeat(1..).discard()
-}
-
-fn space_or_comma<'a>() -> Parser<'a, u8, ()> {
-  ((space() - sym(b',') - space()) | required_space()).discard()
+  sym(b'(') * space::optional() * call(expr_0) - space::optional() - sym(b')')
 }
 
 #[cfg(test)]
 mod test {
   use super::*;
+  use crate::expr::ExprOp;
 
   #[test]
   fn it_should_parse_number_zero() {
@@ -326,6 +266,34 @@ mod test {
   #[test]
   fn it_should_handle_multiple_die_rolls_with_commas_and_spaces() {
     test_multiple(&"1d6 1d6",
+      vec![
+        Expr::Operator( ExprOp::Roll,
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+        Expr::Operator( ExprOp::Roll,
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+      ]
+    );
+  }
+
+  #[test]
+  fn it_should_handle_one_dice_roll_with_num_dice_omitted() {
+    test_multiple(&"d6",
+      vec![
+        Expr::Operator( ExprOp::Roll,
+          Box::new(Expr::Integer(1)),
+          Box::new(Expr::Integer(6)),
+        ),
+      ]
+    );
+  }
+
+  #[test]
+  fn it_should_handle_multiple_dice_rolls_with_num_dice_omitted() {
+    test_multiple(&"d6 d6",
       vec![
         Expr::Operator( ExprOp::Roll,
           Box::new(Expr::Integer(1)),

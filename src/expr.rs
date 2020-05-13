@@ -1,6 +1,6 @@
 #[derive(Clone, Debug, PartialEq)]
 pub enum Expr {
-  Integer(i32),
+  Integer(i64),
   Operator(ExprOp, Box<Expr>, Box<Expr>)
 }
 
