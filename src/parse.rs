@@ -1,4 +1,4 @@
-use crate::expr::Expr;
+use crate::expr::{Expr, ExprOp};
 use ::pom::parser::*;
 use ::pom;
 
@@ -18,12 +18,19 @@ fn exprs<'a>() -> Parser<'a, u8, Vec<Expr>> {
 }
 
 fn expr_0<'a>() -> Parser<'a, u8, Expr> {
-  add_sub() | expr_1()
+  let parser = expr_1() + add_sub_etx().opt();
+
+  parser.map(|(left, ext)| {
+    if let Some((op, right)) = ext {
+      return Expr::Operator(op, box left, box right);
+    }
+
+    left
+  })
 }
 
-fn add_sub<'a>() -> Parser<'a, u8, Expr> {
-  let parser = (expr_1() - space::optional() + op::add_sub() - space::optional()) + call(expr_0);
-  parser.map(|((left, op), right)| Expr::Operator(op, box left, box right))
+fn add_sub_etx<'a>() -> Parser<'a, u8, (ExprOp, Expr)> {
+  (space::optional() * op::add_sub() - space::optional()) + call(expr_0)
 }
 
 fn expr_1<'a>() -> Parser<'a, u8, Expr> {
