@@ -1,5 +1,6 @@
 #![feature(box_syntax, box_patterns)]
 #![feature(impl_trait_in_bindings)]
+#![feature(type_alias_impl_trait)]
 
 use ::std::env;
 use ::pom;
@@ -7,6 +8,7 @@ use ::pom;
 mod expr;
 mod parse;
 mod eval;
+mod moorgate;
 
 fn main() {
     let input = env::args().skip(1).collect::<Vec<String>>().join(" ");
