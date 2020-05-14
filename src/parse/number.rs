@@ -1,7 +1,7 @@
 use ::pom::parser::*;
 use ::std::str::{self, FromStr};
 
-use crate::expr::Expr;
+use crate::ast::Expr;
 
 pub fn number<'a>() -> Parser<'a, u8, Expr> {
   integer()

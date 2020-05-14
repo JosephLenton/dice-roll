@@ -4,7 +4,7 @@ use ::std::fmt;
 use ::std::env;
 use ::pom;
 
-mod expr;
+mod ast;
 mod parse;
 mod eval;
 

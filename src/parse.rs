@@ -1,4 +1,4 @@
-use crate::expr::Expr;
+use crate::ast::Expr;
 use ::pom::parser::*;
 use ::pom;
 
@@ -67,7 +67,7 @@ fn expr_with_brackets<'a>() -> Parser<'a, u8, Expr> {
 #[cfg(test)]
 mod test {
   use super::*;
-  use crate::expr::ExprOp;
+  use crate::ast::ExprOp;
 
   #[test]
   fn it_should_parse_number_zero() {
