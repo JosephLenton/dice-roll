@@ -1,1 +1,1 @@
-web: ./target/release/dice-roll
+web: ./target/release/server
