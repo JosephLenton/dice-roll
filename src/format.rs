@@ -13,7 +13,7 @@ pub fn fmt(
 ) -> io::Result<()> {
     writeln!(
         f,
-        "{} rolled ... {}\nThey got ... {}",
+        "{} rolled ... {}\nand got ... {}",
         username,
         input,
         ResultOutputFormatter(&output)
