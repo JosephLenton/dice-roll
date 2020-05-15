@@ -1,17 +1,16 @@
 #![feature(box_syntax, box_patterns)]
 
 use ::std::env;
-use ::std::fmt;
+use ::std::io;
 
 use ::dice_roll;
 
-fn main() -> Result<(), fmt::Error> {
+fn main() -> io::Result<()> {
     let username = "You";
     let input = env::args().skip(1).collect::<Vec<String>>().join(" ");
-    let mut output = String::new();
+    let mut stdout = io::stdout();
 
-    dice_roll::main(&username, &input, &mut output)?;
+    dice_roll::main(&username, &input, &mut stdout)?;
 
-    println!("{}", output);
     Ok(())
 }

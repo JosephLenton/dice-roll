@@ -1,15 +1,16 @@
 use crate::eval;
 use ::pom;
 use ::std::fmt;
+use ::std::io;
 
 pub type ResultOutput = Result<Vec<Result<eval::Output, eval::Error>>, pom::Error>;
 
 pub fn fmt(
-    f: &mut impl fmt::Write,
+    f: &mut impl io::Write,
     username: &str,
     input: &str,
     output: &ResultOutput,
-) -> fmt::Result {
+) -> io::Result<()> {
     writeln!(
         f,
         "{} rolled ... {}\nThey got ... {}",
