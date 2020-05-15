@@ -3,7 +3,6 @@
 use ::actix_web::{get, web, App, HttpServer, Responder};
 use ::dice_roll;
 use ::std::io;
-use ::std::io::Write;
 
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
