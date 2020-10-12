@@ -67,18 +67,20 @@ fn get_port() -> u16 {
 }
 
 #[derive(FromForm)]
+#[form(lenient)]
 pub struct SlackCommand {
-    // pub token: String,
-    // pub team_id: String,
-    // pub team_domain: String,
-    // pub channel_id: String,
-    // pub channel_name: String,
+    pub token: String,
+    pub team_id: String,
+    pub team_domain: String,
+    pub channel_id: String,
+    pub channel_name: String,
     pub user_id: String,
-    // pub user_name: String,
-    // pub command: String,
+    pub user_name: String,
+    pub command: String,
     pub text: String,
-    // pub response_url: String,
-    // pub trigger_id: String,
+    pub api_app_id: String,
+    pub response_url: String,
+    pub trigger_id: String,
 }
 
 #[derive(Serialize)]
