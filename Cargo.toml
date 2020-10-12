@@ -5,8 +5,8 @@ authors = ["joseph.lenton@askattest.com <joseph.lenton@askattest.com>"]
 edition = "2018"
 
 [dependencies]
-pom = "3.1.0"
+pom = "3.2.0"
 rand = "0.7.3"
-rocket = "0.4.4"
-rocket_contrib = "0.4.4"
-serde = { version="1.0.110", features = ["derive"] }
+rocket = "0.4.5"
+rocket_contrib = "0.4.5"
+serde = { version = "1.0.116", features = ["derive"] }
