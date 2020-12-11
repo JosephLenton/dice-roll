@@ -4,7 +4,7 @@
 use ::dice_roll;
 use ::rocket;
 use ::rocket::config::{Config, Environment};
-use ::rocket::request::{Form, FromForm};
+use ::rocket::request::{LenientForm, FromForm};
 use ::rocket::{get, post, routes};
 use ::rocket_contrib::json::Json;
 use ::serde::Serialize;
@@ -37,7 +37,7 @@ fn roll_get(input: String) -> String {
     format = "application/x-www-form-urlencoded",
     data = "<command>"
 )]
-fn roll_post(command: Form<SlackCommand>) -> Json<SlackResponse> {
+fn roll_post(command: LenientForm<SlackCommand>) -> Json<SlackResponse> {
     let response_name = format!("<@{}>", command.user_id);
     let mut response: Vec<u8> = Vec::new();
     dice_roll::main(&response_name, &command.text, &mut response);
@@ -67,7 +67,6 @@ fn get_port() -> u16 {
 }
 
 #[derive(FromForm)]
-#[form(lenient)]
 pub struct SlackCommand {
     pub token: String,
     pub team_id: String,
@@ -81,6 +80,7 @@ pub struct SlackCommand {
     pub api_app_id: String,
     pub response_url: String,
     pub trigger_id: String,
+    pub is_enterprise_install: bool,
 }
 
 #[derive(Serialize)]
